@@ -30,22 +30,15 @@ void read_word(char *buf)
 int load_file()	//Loads brain10 file into memory
 {
 	char buf[8];
-	int i, c;
+	int i;
 
 	/* clear memory for printing purposes */
 	set_mem('0');
 
 	/* check for header */
-	while (isspace(c=fgetc(stdin)));
-	ungetc(c, stdin);
 	if (scanf("%7s", buf) != 1 || strncasecmp(buf, "BRAIN10", 7) != 0) {
 		fprintf(stderr, "warning: missing or incorrect file header, may not be a BRAIN10 program\n");
 	}
-
-	/* consume whitespace */
-	while (isspace(c=fgetc(stdin)));
-	ungetc(c, stdin);
-	
 
 	for (i=0; i<100; i++) {
 		read_word(buf);
