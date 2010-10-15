@@ -1,0 +1,28 @@
+BRAIN10
+BU08 (jmp START)
+NP00 (stack: param 2)
+NP00 (stack: param 1)
+NP00 (stack: ret_addr)
+0000 (initial esp)
+0003 (param 2)
+0021 (param 1)
+0017 (ret_addr)
+LR04 (mov eax, 0)
+SP00 (mov esp, eax)
+LR05 (mov eax, param 2)
+PH00 (push eax)
+LR06 (mov eax, param 1)
+PH00 (push eax)
+LR07 (mov eax, ret_addr)
+PH00 (push eax)
+BU19 (jmp ADD)
+PD01
+HA00
+PP00 (pop eax)
+LH00 (mov ah, [0]) THIS IS UNPORTABLE
+SR00 (mov [0], eax)
+AS00 (pop eax; add [esp], eax)
+PP00 (pop eax)
+BU00 (return)
+DATA
+END

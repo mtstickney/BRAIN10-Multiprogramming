@@ -1,0 +1,43 @@
+BRAIN10
+BU16
+0000
+0001
+NP00
+NP00
+NP00
+NP00
+NP00
+NP00
+NP00
+NP00
+0001 (i-2)
+0002 (i-1)
+0003 (i)
+0011 (end)
+0001 increment
+LR13 load i
+CL14 check bounds
+BT21
+PD01
+HA00
+LR01 load [i-2]
+AD02 add [i-1]
+SR03 store [i]
+LR11 load i-2
+AD15 incr
+SR11 store i-2
+LH21 load i-2 instruction
+SR21 store i-2 instruction
+LR12 load i-1
+AD15 incr
+SR12 store i-1
+LH22 load i-2 instruction
+SR22 store i-2 instruction
+LR13 load i
+AD15 incr
+SR13 store i
+LH23 load i instruction
+SR23 store i instruction
+BU16 loop
+DATA
+END
