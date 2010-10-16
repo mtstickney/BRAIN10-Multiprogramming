@@ -26,6 +26,61 @@ void read_word(char *buf)
 	}
 }
 
+static int check_header(char *word, int *loc)
+{
+	char buf[5];
+	size_t len;
+	size_t pid, offset;
+	int c;
+
+	scanf("%4s", buf);
+	len = strlen(buf);
+	if (len == 4) { /* normal word */
+		pid = *loc/100;
+		offset = *loc%100;
+		*loc += 2;
+		if (store(pid, word, offset++) != 0) {
+			fprintf(stderr, "check_header: store failed\n");
+			return 1;
+		}
+		if (offset > 99) {
+			fprintf(stderr, "check_header: read more than 99 words without seeing a BRAIN10 header\n");
+			return 1;
+		}
+		if (store(pid, buf, offset) != 0) {
+			fprintf(stderr, "check_header: store failed\n");
+			return 1;
+		}
+	} else if (strcasecmp(buf, "N10") == 0 && len == 3) { /* BRAIN10 header */
+		if (*loc > 0) {
+			/* fast forward to end of address space */
+			*loc += 99 - (*loc)%100;
+		}
+		return 0;
+	} else {
+		do {
+			c = fgetc(stdin);
+			if (!isspace(c))
+				buf[len++] = c;
+		} while(len < 4 && !feof(stdin));
+		if (feof(stdin)) {
+			fprintf(stderr, "check_header: Unexpected EOF\n");
+			return 1;
+		}
+		return 0;
+	}
+}
+
+static int store_word(char *word, int *loc)
+{
+	size_t pid, offset;
+
+	pid = *loc/100;
+	offset = *loc%100;
+	(*loc)++;
+	return store(pid, word, offset);
+}
+
 /* notes: entries are checked in order, first that matches wins.
 	NULL string matches any word, NULL action terminates.
 	only the first 4 chars are checked. */
