@@ -141,6 +141,7 @@ int main()
 	p.c = 'F';
 	p.runnable = 1;
 	p.stack_base = 0;
+	p.pid = 0;
 
 	print_mem();
 	while (tick(&p) == 0 && p.runnable);
