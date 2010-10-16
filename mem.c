@@ -14,7 +14,7 @@ static char *get_memp(unsigned int pid, unsigned int addr) {
 	if (addr > 99) {
 		return NULL;
 	}
-	return &mem[pid*100+4*addr];
+	return &mem[4*(pid*100+addr)];
 }
 
 /* Note: load and store convert endianness of words. */
@@ -46,18 +46,16 @@ int store(unsigned int pid, const char *src, unsigned int addr)
 
 void print_mem()
 {
-	int i,j,k;
+	int i,j;
 	char *p;
-	
-	for (k=0; k<10; k++) {
-		for (i=0; i<100; i++) {
-			printf("%02d ", i);
-			for (j=0; j<9; j++, i++) {
-				p = get_memp(k, i);
-				printf("%c%c%c%c ", p[0], p[1], p[2], p[3]);
-			}
-			p=get_memp(k, i);
-			printf("%c%c%c%c\n", p[0], p[1], p[2], p[3]);
+
+	for (i=0; i<1000; i++) {
+		printf("%03d ", i);
+		for (j=0; j<9; j++, i++) {
+			p = get_memp(i/100, i%100);
+			printf("%c%c%c%c ", p[0], p[1], p[2], p[3]);
 		}
+		p=get_memp(i/100, i%100);
+		printf("%c%c%c%c\n", p[0], p[1], p[2], p[3]);
 	}
 }	
