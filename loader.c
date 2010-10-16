@@ -25,46 +25,51 @@ void read_word(char *buf)
 		} while (len < 4 && !feof(stdin));
 	}
 }
-	
 
-int load_file()	//Loads brain10 file into memory
+/* notes: entries are checked in order, first that matches wins.
+	NULL string matches any word, NULL action terminates.
+	only the first 4 chars are checked. */
+struct str_act {
+	char *match;
+	int (*action)(char *word, int *loc);
+};
+
+static struct str_act parse_table[]=
 {
-	char buf[8];
-	int i;
+	{"BRAI", check_header},
+	{"DATA", NULL},
+	{NULL, store_word},
+};
 
-	/* clear memory for printing purposes */
-	set_mem('0');
+int load_progs()
+{
+	struct str_act *p;
+	int i,addr;
+	char buf[5];
 
-	/* check for header */
-	if (scanf("%7s", buf) != 1 || strncasecmp(buf, "BRAIN10", 7) != 0) {
-		fprintf(stderr, "warning: missing or incorrect file header, may not be a BRAIN10 program\n");
-	}
-
-	for (i=0; i<100; i++) {
+	addr=0;
+	while (addr<1000) {
 		read_word(buf);
-		if (feof(stdin)) {
-			fprintf(stderr, "load: Unexpected EOF. Attempting to run, expect badness.\n");
+		p = parse_table;
+		for (i=0; i<LEN(parse_table); i++) {
+			if (p->match == NULL || strncasecmp(buf, p->match, 4) == 0)
+				break;
+			p++;
+		}
+		if (i >= LEN(parse_table)) {
+			fprintf(stderr, "load_progs: no matching action for word\n");
+			return 1;
+		}
+		if (p->action == NULL) {
+			while (fgetc(stdin) != '\n'); /* ignore the rest of the line */
 			return 0;
 		}
-
-		if (strncasecmp(buf, "DATA", 4) == 0)
-			return 0;
-		/* now that we have 4 chars, save 'em */
-		if (store(buf, i) == -1) {
-			fprintf(stderr, "load: store failed\n");
-			return -1;
+		if (p->action(buf, &addr) != 0) {
+			fprintf(stderr, "load_progs: action failed\n");
+			return 1;
 		}
-
-		/* ignore the rest of the line */
 		while (fgetc(stdin) != '\n');
 	}
-
-	/* consume leftover instructions */
-	do {
-		read_word(buf);
-	} while (strncasecmp(buf, "DATA", 4) != 0);
-	if (feof(stdin)) 
-		fprintf(stderr, "load: unexpected EOF, expect badness.\n");
 	return 0;
 }
 
