@@ -32,7 +32,7 @@ static int load_register(struct proc *p, int addr)
 		fprintf(stderr, "load_register: invalid address\n");
 		return -1;
 	}
-	if (load(addr, p->r) == -1) {
+	if (load(p->pid, addr, p->r) == -1) {
 		fprintf(stderr, "load_register: load failed\n");
 		return -1;
 	}
@@ -47,7 +47,7 @@ static int load_low(struct proc *p, int addr)
 		fprintf(stderr, "load_low: invalid address\n");
 		return -1;
 	}
-	if (load(addr, temp) == -1) {
+	if (load(p->pid, addr, temp) == -1) {
 		fprintf(stderr, "load_low: load failed\n");
 		return -1;
 	}
@@ -63,7 +63,7 @@ static int load_high(struct proc *p, int addr)
 		fprintf(stderr, "load_high: invalid address\n");
 		return -1;
 	}
-	if (load(addr, temp) == -1) {
+	if (load(p->pid, addr, temp) == -1) {
 		fprintf(stderr, "load_high: load failed\n");
 		return -1;
 	}
@@ -77,7 +77,7 @@ static int store_register(struct proc *p, int addr)
 		fprintf(stderr, "store_register: invalid address\n");
 		return -1;
 	}
-	if (store(p->r, addr) == -1) {
+	if (store(p->pid, p->r, addr) == -1) {
 		fprintf(stderr, "store_register: store failed\n");
 		return -1;
 	}
@@ -115,7 +115,7 @@ static int push(struct proc *p, int addr)
 		fprintf(stderr, "push: Out of memory\n");
 		return -1;
 	}
-	if (store(p->r, addr) == -1) {
+	if (store(p->pid, p->r, addr) == -1) {
 		fprintf(stderr, "push: store failed\n");
 		return -1;
 	}
@@ -137,7 +137,7 @@ static int pop(struct proc *p, int addr)
 		fprintf(stderr, "pop: pop on empty stack\n");
 		return -1;
 	}
-	if (load(addr, p->r) == -1) {
+	if (load(p->pid, addr, p->r) == -1) {
 		fprintf(stderr, "pop: load failed\n");
 		return -1;
 	}
@@ -154,7 +154,7 @@ static int cmp_eql(struct proc *p, int addr)
 		fprintf(stderr, "cmp_eql: invalid address\n");
 		return -1;
 	}
-	if (load(addr, temp) == -1) {
+	if (load(p->pid, addr, temp) == -1) {
 		fprintf(stderr, "cmp_eql: load failed\n");
 		return -1;	
 	}
@@ -173,7 +173,7 @@ static int cmp_less(struct proc *p, int addr)
 		fprintf(stderr, "cmp_less: invalid address\n");
 		return -1;
 	}
-	if (load(addr, temp) == -1) {
+	if (load(p->pid, addr, temp) == -1) {
 		fprintf(stderr, "cmp_less: load failed\n");
 		return -1;
 	}
@@ -233,7 +233,7 @@ static int read(struct proc *p, int addr)
 			fprintf(stderr, "read: Unexpected EOF\n");
 			return -1;
 		}
-		if (store(temp, addr++) == -1) {
+		if (store(p->pid, temp, addr++) == -1) {
 			fprintf(stderr, "read: store failed\n");
 			return -1;
 		}
@@ -252,7 +252,7 @@ static int print(struct proc *p, int addr)
 	}
 
 	for (i=0; i<10; i++) {
-		if (load(addr++, temp) == -1) {
+		if (load(p->pid, addr++, temp) == -1) {
 			fprintf(stderr, "print: load failed\n");
 			return -1;
 		}
@@ -270,7 +270,7 @@ static int add(struct proc *p, int addr)
 		fprintf(stderr, "add: invalid address\n");
 		return -1;
 	}
-	if (load(addr, temp) == -1) {
+	if (load(p->pid, addr, temp) == -1) {
 		fprintf(stderr, "add: load failed\n");
 		return -1;
 	}
@@ -298,7 +298,7 @@ static int subtract(struct proc *p, int addr)
 		fprintf(stderr, "subtract: invalid address\n");
 		return -1;
 	}
-	if (load(addr, temp) == -1) {
+	if (load(p->pid, addr, temp) == -1) {
 		fprintf(stderr, "subtract: load failed\n");
 		return -1;
 	}
@@ -331,7 +331,7 @@ static int multiply(struct proc *p, int addr)
 		fprintf(stderr, "multiply: invalid address\n");
 		return -1;
 	}
-	if (load(addr, temp) == -1) {
+	if (load(p->pid, addr, temp) == -1) {
 		fprintf(stderr, "multiply: load failed\n");
 		return -1;
 	}
@@ -361,7 +361,7 @@ static int divide(struct proc *p, int addr)
 		fprintf(stderr, "divide: invalid address\n");
 		return -1;
 	}
-	if (load(addr, temp) == -1) {
+	if (load(p->pid, addr, temp) == -1) {
 		fprintf(stderr, "divide: load failed\n");
 		return -1;
 	}
@@ -401,11 +401,11 @@ static int add_stack(struct proc *p, int addr)
 		return -1;
 	}
 
-	if (load(addr--, word1) == -1) {
+	if (load(p->pid, addr--, word1) == -1) {
 		fprintf(stderr, "add_stack: load failed\n");
 		return -1;
 	}
-	if (load(addr, word2) == -1) {
+	if (load(p->pid, addr, word2) == -1) {
 		fprintf(stderr, "add_stack: load failed\n");
 		return -1;
 	}
@@ -419,7 +419,7 @@ static int add_stack(struct proc *p, int addr)
 	j += i;
 	int2word(j, word2); /* store new stack value */
 	int2word(addr, p->sp); /* store stack pointer */
-	if (store(word2, addr) == -1) {
+	if (store(p->pid, word2, addr) == -1) {
 		fprintf(stderr, "add_stack: store failed\n");
 		return -1;
 	}
@@ -437,11 +437,11 @@ static int subtract_stack(struct proc *p, int addr)
 		fprintf(stderr, "subtract_stack: invalid stack pointer\n");
 		return -1;
 	}
-	if (load(addr--, word1) == -1) {
+	if (load(p->pid, addr--, word1) == -1) {
 		fprintf(stderr, "subtract_stack: load failed\n");
 		return -1;
 	}
-	if (load(addr, word2) == -1) {
+	if (load(p->pid, addr, word2) == -1) {
 		fprintf(stderr, "subtract_stack: load_failed\n");
 		return -1;
 	}
@@ -460,7 +460,7 @@ static int subtract_stack(struct proc *p, int addr)
 	j -= i;
 	int2word(j, word2);
 	int2word(addr, p->sp);
-	if (store(word2, addr) == -1) {
+	if (store(p->pid, word2, addr) == -1) {
 		fprintf(stderr, "subtract_stack: store failed\n");
 		return -1;
 	}
@@ -478,11 +478,11 @@ static int multiply_stack(struct proc *p, int addr)
 		fprintf(stderr, "multiply_stack: invalid stack pointer\n");
 		return -1;
 	}
-	if (load(addr--, word1) == -1) {
+	if (load(p->pid, addr--, word1) == -1) {
 		fprintf(stderr, "multiply_stack: load failed\n");
 		return -1;
 	}
-	if (load(addr, word2) == -1) {
+	if (load(p->pid, addr, word2) == -1) {
 		fprintf(stderr, "multiply_stack: load failed\n");
 		return -1;
 	}
@@ -497,7 +497,7 @@ static int multiply_stack(struct proc *p, int addr)
 	j *= i;
 	int2word(j, word2);
 	int2word(addr, p->sp);
-	if (store(word2, addr) == -1) {
+	if (store(p->pid, word2, addr) == -1) {
 		fprintf(stderr, "multiply_stack: store failed\n");
 		return -1;
 	}
@@ -515,11 +515,11 @@ static int divide_stack(struct proc *p, int addr)
 		fprintf(stderr, "divide_stack: invalid stack pointer\n");
 		return -1;
 	}
-	if (load(addr--, word1) == -1) {
+	if (load(p->pid, addr--, word1) == -1) {
 		fprintf(stderr, "divide_stack: load failed\n");
 		return -1;
 	}
-	if (load(addr, word2) == -1) {
+	if (load(p->pid, addr, word2) == -1) {
 		fprintf(stderr, "divide_stack: load failed\n");
 		return -1;
 	}
@@ -539,7 +539,7 @@ static int divide_stack(struct proc *p, int addr)
 	j /= i;
 	int2word(j, word2);
 	int2word(addr, p->sp);
-	if (store(word2, addr) == -1) {
+	if (store(p->pid, word2, addr) == -1) {
 		fprintf(stderr, "divide_stack: store failed\n");
 		return -1;
 	}
@@ -606,7 +606,7 @@ int tick(struct proc *p)
 		fprintf(stderr, "tick: invalid IC\n");
 		return -1;
 	}
-	if (load(ic, word) == -1) {
+	if (load(p->pid, ic, word) == -1) {
 		fprintf(stderr, "tick: load failed\n");
 		return -1;
 	}

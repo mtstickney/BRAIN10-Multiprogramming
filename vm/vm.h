@@ -8,6 +8,7 @@ struct proc
 	char c;
 	int runnable;
 	unsigned int stack_base;
+	unsigned int pid;
 };
 
 #define OPCODE(a, b) (((int)(a)<<8)+(b))
