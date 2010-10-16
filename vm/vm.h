@@ -1,3 +1,5 @@
+#define LEN(a) (sizeof(a)/sizeof((a)[0]))
+
 struct proc
 {
 	char r[4];
