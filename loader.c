@@ -132,7 +132,8 @@ int main()
 {
 	struct proc p;
 
-	if (load_file() == -1)
+	set_mem('0');
+	if (load_progs() != 0)
 		return 1;
 
 	/* set up the process */
