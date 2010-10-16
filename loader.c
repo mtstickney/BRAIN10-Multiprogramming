@@ -54,7 +54,7 @@ static int check_header(char *word, int *loc)
 	} else if (strcasecmp(buf, "N10") == 0 && len == 3) { /* BRAIN10 header */
 		if (*loc > 0) {
 			/* fast forward to end of address space */
-			*loc += 99 - (*loc)%100;
+			*loc += 100 - (*loc)%100;
 		}
 		return 0;
 	} else {
