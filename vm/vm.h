@@ -6,10 +6,11 @@ struct proc
 	char sp[4];
 	char ic[2];
 	char c;
-	int halted;
 	unsigned int stack_base;
 	unsigned int pid;
 };
+
+extern struct proc proc_table[10];
 
 struct plist
 {
@@ -52,5 +53,5 @@ struct op
 	int (*run)(struct proc *p, int addr);
 };
 
-int tick(struct proc *p);
+int tick(unsigned int pid);
 	

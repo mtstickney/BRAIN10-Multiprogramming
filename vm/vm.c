@@ -585,19 +585,21 @@ static struct op op_table[] = {
 	{ .opcode=HA, .run=halt }
 };
 
-int tick(struct proc *p)
+struct proc proc_table[10];
+
+int tick(unsigned int pid)
 {
 	char word[4];
 	char temp[4];
 	enum OP op;
 	int addr, ic, i;
+	struct proc *p;
 
-	if (p == NULL) {
-		fprintf(stderr, "tick: NULL process\n");
-		return -1;
+	if (pid > 9) {
+		fprintf(stderr, "tick: invalid PID %u\n", pid);
+		return 1;
 	}
-	if (p->halted)
-		return 0;
+	p = &proc_table[pid];
 
 	/* load the word at p->ic */
 	memset(temp, '0', 4);
