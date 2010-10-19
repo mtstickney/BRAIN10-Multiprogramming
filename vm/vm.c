@@ -553,7 +553,8 @@ static int nop(struct proc *p, int addr)
 
 static int halt(struct proc *p, int addr)
 {
-	p->halted = 1;
+	reset(p->pid);
+	suspend(p->pid);
 	return 0;
 }
 
