@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "vm.h"
 #include "mem.h"
+#include "sched.h"
 
 int word2int(char *p)
 {
@@ -553,8 +554,8 @@ static int nop(struct proc *p, int addr)
 
 static int halt(struct proc *p, int addr)
 {
-	reset(p->pid);
-	suspend(p->pid);
+	sched_reset(p->pid);
+	sched_suspend(p->pid);
 	return 0;
 }
 
