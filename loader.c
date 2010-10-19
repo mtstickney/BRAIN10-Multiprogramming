@@ -142,11 +142,15 @@ int main()
 	if (procs < 0)
 		return 1;
 
+	if (sched_init() != 0) {
+		fprintf(stderr, "Scheduler init failed\n");
+		return 1;
+	}
 	for (i=0; i<procs; i++) {
 		p = &proc_table[i];
 
 		/* set up the process */
-		memset(&p, '0', sizeof(struct proc));
+		memset(p, '0', sizeof(struct proc));
 		p->c = 'F';
 		p->stack_base = 0;
 		p->pid = i;
