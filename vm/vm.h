@@ -6,9 +6,15 @@ struct proc
 	char sp[4];
 	char ic[2];
 	char c;
-	int runnable;
+	int halted;
 	unsigned int stack_base;
 	unsigned int pid;
+};
+
+struct plist
+{
+	struct proc *p;
+	struct plist *next;
 };
 
 #define OPCODE(a, b) (((int)(a)<<8)+(b))

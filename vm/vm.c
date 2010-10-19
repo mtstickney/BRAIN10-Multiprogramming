@@ -553,7 +553,7 @@ static int nop(struct proc *p, int addr)
 
 static int halt(struct proc *p, int addr)
 {
-	p->runnable = 0;
+	p->halted = 1;
 	return 0;
 }
 
@@ -595,7 +595,7 @@ int tick(struct proc *p)
 		fprintf(stderr, "tick: NULL process\n");
 		return -1;
 	}
-	if (p->runnable == 0)
+	if (p->halted)
 		return 0;
 
 	/* load the word at p->ic */
