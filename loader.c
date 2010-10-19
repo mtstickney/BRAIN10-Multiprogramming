@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include "mem.h"
 #include "vm.h"
+#include "sched.h"
 
 /* note: buf should be able to hold word_size+1 bytes, since we use scanf to read */
 void read_word(char *buf)
@@ -26,6 +27,8 @@ void read_word(char *buf)
 	}
 }
 
+/* FIXME: we need to ignore the rest of the line either here or in the dispatch func,
+ * but still handle headers. Probably. */
 static int check_header(char *word, int *loc)
 {
 	char buf[5];
@@ -81,7 +84,7 @@ static int store_word(char *word, int *loc)
 	return store(pid, word, offset);
 }
 
-/* notes: entries are checked in order, first that matches wins.
+/* notes: entries are checked in order, first match wins.
 	NULL string matches any word, NULL action terminates.
 	only the first 4 chars are checked. */
 struct str_act {
@@ -96,6 +99,7 @@ static struct str_act parse_table[]=
 	{NULL, store_word},
 };
 
+/* returns number of programs loaded */
 int load_progs()
 {
 	struct str_act *p;
@@ -117,33 +121,43 @@ int load_progs()
 		}
 		if (p->action == NULL) {
 			while (fgetc(stdin) != '\n'); /* ignore the rest of the line */
-			return 0;
+			return addr/100+1;
 		}
 		if (p->action(buf, &addr) != 0) {
 			fprintf(stderr, "load_progs: action failed\n");
-			return 1;
+			return -1;
 		}
 		while (fgetc(stdin) != '\n');
 	}
-	return 0;
+	return addr/100+1;
 }
 
 int main()
 {
-	struct proc p;
+	struct proc *p;
+	int procs,i;
 
 	set_mem('0');
-	if (load_progs() != 0)
+	procs = load_progs();
+	if (procs < 0)
 		return 1;
 
-	/* set up the process */
-	memset(&p, '0', sizeof(struct proc));
-	p.c = 'F';
-	p.stack_base = 0;
-	p.pid = 0;
+	for (i=0; i<procs; i++) {
+		p = &proc_table[i];
+
+		/* set up the process */
+		memset(&p, '0', sizeof(struct proc));
+		p->c = 'F';
+		p->stack_base = 0;
+		p->pid = i;
+
+		/* schedule process */
+		sched_reset(i);
+		sched_resume(i);
+	}
 
 	print_mem();
-	while (tick(&p) == 0 && !p.halted);
+	sched_run();
 	print_mem();
 
 	return 0;
