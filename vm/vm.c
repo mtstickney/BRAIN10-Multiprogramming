@@ -630,6 +630,6 @@ int tick(unsigned int pid)
 		if (op_table[i].opcode == op)
 			return op_table[i].run(p, addr);
 	}
-	fprintf(stderr, "tick: Illegal operation %c%c\n", word[0], word[1]);
+	fprintf(stderr, "tick: Illegal operation %c%c (pid %u)\n", word[0], word[1], pid);
 	return -1;
 }
