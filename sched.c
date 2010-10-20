@@ -108,11 +108,11 @@ int sched_resume(unsigned int pid)
 	newp = &task_table[pid];
 	curp = &task_table[rq.current];
 	/* don't let a process that has slept for an hour starve all the others */
-	newp->vruntime = MAX(newp->pid, rq.min_vruntime-SCHED_LATENCY);
+	newp->vruntime = MAX(newp->vruntime, rq.min_vruntime-SCHED_LATENCY);
 	rq.min_vruntime = newp->vruntime;
 	rq.current = newp->pid;
 	if (rq.nr_running > 0)
-		RBTreeInsert(rq.t, &(curp->vruntime), &(curp->pid));
+		curp->n = RBTreeInsert(rq.t, &(curp->vruntime), &(curp->pid));
 	rq.nr_running++;
 	return 0;
 }
