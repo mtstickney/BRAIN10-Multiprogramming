@@ -55,4 +55,5 @@ struct op
 int tick(unsigned int pid);
 int word2int(char *);
 void int2word(int a, char *b);
+void msg_init();
 	
