@@ -3,6 +3,22 @@
 #include "vm.h"
 #include "mem.h"
 #include "sched.h"
+#include "wait_queue.h"
+
+struct msg_queues
+{
+	struct plist_head senders;
+	struct plist_head recvers;
+};
+
+/* wait queues for message passing */
+/* Note: last position is used to store procs receiving from any */
+static struct msg_queues wq_table[11];
+
+void msg_init()
+{
+	memset(wq_table, 0, 10*sizeof(struct msg_queues));
+}
 
 int word2int(char *p)
 {

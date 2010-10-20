@@ -14,12 +14,6 @@ struct proc
 
 extern struct proc proc_table[10];
 
-struct plist
-{
-	struct proc *p;
-	struct plist *next;
-};
-
 #define OPCODE(a, b) (((int)(a)<<8)+(b))
 
 enum OP {
