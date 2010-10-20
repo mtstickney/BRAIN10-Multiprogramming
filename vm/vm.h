@@ -42,6 +42,7 @@ enum OP {
 	NP = OPCODE('N', 'P'),
 	SD = OPCODE('S', 'D'),
 	RC = OPCODE('R', 'C'),
+	GP = OPCODE('G', 'P'),
 	HA = OPCODE('H', 'A')
 };
 

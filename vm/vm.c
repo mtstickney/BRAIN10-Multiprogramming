@@ -702,6 +702,11 @@ static int recv(struct proc *p, int pid)
 	return 0;
 }
 
+static int identify(struct proc *p, int addr)
+{
+	int2word(p->pid, p->r);
+}
+
 static int halt(struct proc *p, int addr)
 {
 	sched_reset(p->pid);
@@ -735,6 +740,7 @@ static struct op op_table[] = {
 	{ .opcode=NP, .run=nop },
 	{ .opcode=SD, .run=send },
 	{ .opcode=RC, .run=recv },
+	{ .opcode=GP, .run=identify },
 	{ .opcode=HA, .run=halt }
 };
 
