@@ -135,26 +135,28 @@ int sched_run()
 	rb_red_blk_node *n;
 	struct sched_ent *curp;
 
-	next_tick = rq.fair_clock+SCHED_GRANULARITY;
 	while (rq.nr_running > 0) {
-		curp = &task_table[rq.current];
-		n = leftmost(rq.t);
-		i = 0;
-		while (rq.fair_clock != next_tick) {
+		next_tick = rq.fair_clock+SCHED_GRANULARITY;
+		while (rq.fair_clock != next_tick && rq.nr_running > 0) {
 			if (++i % rq.nr_running == 0)
 				rq.fair_clock++;
+			task_table[rq.current].vruntime++;
+			/* Note: a HALT here may remove the last running proc */
 			tick(rq.current);
 		}
-		if (rq.nr_running == 1)
+		if (rq.nr_running < 2)
 			continue;
-		if (*((unsigned int*)n->key)-rq.min_vruntime > curp->vruntime-rq.min_vruntime)
-			continue;
-		/* no longer the most unfairly treated proc, time to context switch */
-		rq.current = *((unsigned int*)n->info);
-		rq.min_vruntime = *((unsigned int*)n->key);
-		RBDelete(rq.t, n);
-		RBTreeInsert(rq.t, &(curp->vruntime), &(curp->pid));
-		fprintf(stderr, "CTXT SWITCH (timeout)\n");
+		n = leftmost(rq.t);
+		curp = &task_table[rq.current];
+		if (key_comp(&(curp->vruntime), n->key) > 0) {
+			fprintf(stderr, "CTXT SWITCH (timeout)\n");
+			/* no longer the most unfairly treated proc, time for context switch */
+			rq.min_vruntime = *((unsigned int*)n->key);
+			rq.current = *((unsigned int*)n->info);
+			curp->n = RBTreeInsert(rq.t, &(curp->vruntime), &(curp->pid));
+			RBDelete(rq.t, n);
+			task_table[rq.current].n = NULL;
+		}
 	}
 	return 0;
 }
