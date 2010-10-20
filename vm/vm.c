@@ -568,6 +568,140 @@ static int nop(struct proc *p, int addr)
 	return 0;
 }
 
+static struct plist *get_recver(struct proc *sender, int target_pid)
+{
+	struct plist *waitp;
+
+	/* check receievers waiting on us */
+	for (waitp = wq_table[sender->pid].recvers.head; waitp != NULL; waitp = waitp->next) {
+		if (waitp->p->pid == target_pid)
+			break;
+	}
+	if (waitp != NULL)
+		return waitp;
+	/* check receivers waiting on anybody */
+	for (waitp = wq_table[10].recvers.head; waitp != NULL; waitp = waitp->next) {
+		if (waitp->p->pid == target_pid)
+			break;
+	}
+	return waitp;
+}
+
+static int send(struct proc *p, int pid)
+{
+	struct plist *waitp;
+	char word[4];
+	unsigned int ic;
+
+	if (pid < 0 || pid > 9) {
+		fprintf(stderr, "send: invalid process id\n");
+		return 1;
+	}
+
+	waitp = get_recver(p, pid);
+	if (waitp == NULL) {
+		/* nobody's waiting on us, add ourselves to the wait list */
+		if (insert_proc(&(wq_table[pid].senders), p) != 0) {
+			fprintf(stderr, "send: failed to add proc to wait queue\n");
+			return 1;
+		}
+		sched_suspend(p->pid);
+		return 0;
+	}
+
+	/* reset the receiver's IC to the read instruction and wake it up */
+	memset(word, '0', 4);
+	memcpy(word+2, waitp->p->ic, 2);
+	ic = word2int(word);
+	if (ic < 0 || ic > 99) {
+		fprintf(stderr, "send: invalid IC in receiver process\n");
+		return 1;
+	}
+	int2word(--ic, word);
+	memcpy(waitp->p->ic, word+2, 2);
+	/* put ourselves on the wait queue */
+	if (insert_proc(&(wq_table[pid].senders), p) != 0) {
+		fprintf(stderr, "send: failed to add self to wait queue\n");
+		return 1;
+	}
+	/* remove receiver from whichever wait queue it was on */
+	if (remove_proc(&(wq_table[p->pid].recvers), &proc_table[pid]) != 0 &&
+	    remove_proc(&(wq_table[10].recvers), &proc_table[pid]) != 0) {
+		fprintf(stderr, "send: Failed to remove receiver from wait queue\n");
+		return 1;
+	}
+	sched_resume(pid);
+	sched_suspend(p->pid);
+	return 0;
+}
+
+static int recv(struct proc *p, int pid)
+{
+	struct plist *waitp;
+	int store_loc, load_loc;
+	int i;
+	char temp[4];
+
+	if (pid > 9) {
+		fprintf(stderr, "recv: invalid pid\n");
+		return 1;
+	}
+
+	store_loc = word2int(p->r);
+	if (store_loc < 0) {
+		fprintf(stderr, "recv: invalid storage location\n");
+		return 1;
+	}
+
+	/* get the waiting process, if any */
+	if (pid < 0) {
+		/* receive from any */
+		waitp = wq_table[p->pid].senders.head;
+	} else {
+		for (waitp=wq_table[p->pid].senders.head; waitp!=NULL; waitp=waitp->next) {
+			if (waitp->p->pid == pid)
+				break;
+		}
+	}
+	if (waitp == NULL) {
+		/* put ourselves on wait queue and suspend */
+		if (pid < 0 && insert_proc(&(wq_table[10].recvers), p) != 0) {
+			fprintf(stderr, "recv: Failed to add self to wait queue\n");
+			return 1;
+		}
+		if (pid >= 0 && insert_proc(&(wq_table[pid].recvers), p) != 0) {
+			fprintf(stderr, "recv: Failed to add self to wait queue\n");
+			return 1;
+		}
+		sched_suspend(p->pid);
+		return 0;
+	}
+
+	load_loc = word2int(waitp->p->r);
+	if (load_loc < 0) {
+		fprintf(stderr, "recv: invalid load location\n");
+		return 1;
+	}
+	for (i=0; i<10; i++) {
+		if (load(waitp->p->pid, load_loc++, temp) != 0) {
+			fprintf(stderr, "recv: load failed\n");
+			return 1;
+		}
+		if (store(p->pid, temp, store_loc++) != 0) {
+			fprintf(stderr, "recv: store failed\n");
+			return 1;
+		}
+	}
+	/* we're done with the sender, so wake them up */
+	pid = waitp->p->pid;
+	if (remove_proc(&(wq_table[p->pid].senders), waitp->p) != 0) {
+		fprintf(stderr, "recv: failed to remove sender from wait queue\n");
+		return 1;
+	}
+	sched_resume(pid);
+	return 0;
+}
+
 static int halt(struct proc *p, int addr)
 {
 	sched_reset(p->pid);
@@ -599,6 +733,8 @@ static struct op op_table[] = {
 	{ .opcode=MS, .run=multiply_stack },
 	{ .opcode=DS, .run=divide_stack },
 	{ .opcode=NP, .run=nop },
+	{ .opcode=SD, .run=send },
+	{ .opcode=RC, .run=recv },
 	{ .opcode=HA, .run=halt }
 };
 
