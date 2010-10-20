@@ -78,17 +78,19 @@ int sched_suspend(unsigned int pid)
 	
 	fprintf(stderr, "CTXT SWITCH (suspend)\n");
 	taskp = &task_table[pid];
-	if (rq.current != pid) {
-		/* need to remove pid from the runqueue */
+	if (rq.current == pid) {
+		if (rq.nr_running > 1) {
+			/* context switch */
+			n = leftmost(rq.t);
+			rq.current = *((unsigned int*)n->info);
+			task_table[rq.current].n = NULL;
+			RBDelete(rq.t, n);
+		}
+	} else {
 		RBDelete(rq.t, taskp->n);
 		taskp->n = NULL;
 	}
-	/* context switch */
-	n = leftmost(rq.t);
-	rq.current = *((unsigned int*)n->info);
-	RBDelete(rq.t, n);
 	rq.nr_running--;
-
 	return 0;
 }
 
