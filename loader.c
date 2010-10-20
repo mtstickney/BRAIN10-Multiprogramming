@@ -146,6 +146,7 @@ int main()
 		fprintf(stderr, "Scheduler init failed\n");
 		return 1;
 	}
+	msg_init();
 	for (i=0; i<procs; i++) {
 		p = &proc_table[i];
 
