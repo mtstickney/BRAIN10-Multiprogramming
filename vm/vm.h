@@ -4,6 +4,8 @@ struct proc
 {
 	char r[4];
 	char sp[4];
+	char br[4];
+	char lr[4];
 	char ic[2];
 	char c;
 	unsigned int stack_base;
