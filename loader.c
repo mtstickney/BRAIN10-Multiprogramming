@@ -154,6 +154,8 @@ int main()
 		p->c = 'F';
 		p->stack_base = 0;
 		p->pid = i;
+		int2word(i*100, p->br);
+		int2word(99, p->lr);
 
 		/* schedule process */
 		sched_reset(i);
