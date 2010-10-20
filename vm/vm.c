@@ -705,6 +705,7 @@ static int recv(struct proc *p, int pid)
 static int identify(struct proc *p, int addr)
 {
 	int2word(p->pid, p->r);
+	return 0;
 }
 
 static int halt(struct proc *p, int addr)
