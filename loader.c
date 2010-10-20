@@ -163,9 +163,9 @@ int main()
 		sched_resume(i);
 	}
 
-	print_mem();
+	/* print_mem(); */
 	sched_run();
-	print_mem();
+	/* print_mem(); */
 
 	return 0;
 }
