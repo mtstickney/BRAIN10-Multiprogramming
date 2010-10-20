@@ -38,6 +38,10 @@ static struct sched_ent task_table[10] =
 
 static struct cfs_rq rq = {.t=NULL, .min_vruntime=0, .fair_clock=0, .current=0, .nr_running=0};
 
+/* accounting vars for program analysis */
+unsigned int ctx_switches;
+unsigned int ops;
+
 static rb_red_blk_node *leftmost(rb_red_blk_tree *t)
 {
 	rb_red_blk_node *n;
@@ -60,6 +64,8 @@ static int key_comp(const void* k1, const void* k2)
 
 int sched_init()
 {
+	ops = 0;
+	ctx_switches=0;
 	rq.t = RBTreeCreate(key_comp, NullFunction, NullFunction, NullFunction, NullFunction);
 	if (rq.t == NULL)
 		return 1;
@@ -75,8 +81,8 @@ int sched_suspend(unsigned int pid)
 		fprintf(stderr, "sched_suspend: invalid PID %u\n", pid);
 		return 1;
 	}
-	
-	fprintf(stderr, "CTXT SWITCH (suspend)\n");
+
+	ctx_switches++;
 	taskp = &task_table[pid];
 	if (rq.current == pid) {
 		if (rq.nr_running > 1) {
@@ -103,7 +109,7 @@ int sched_resume(unsigned int pid)
 		return 1;
 	}
 
-	fprintf(stderr, "CTXT SWITCH (resume)\n");
+	ctx_switches++;
 
 	newp = &task_table[pid];
 	curp = &task_table[rq.current];
@@ -143,13 +149,14 @@ int sched_run()
 			task_table[rq.current].vruntime++;
 			/* Note: a HALT here may remove the last running proc */
 			tick(rq.current);
+			ops++;
 		}
 		if (rq.nr_running < 2)
 			continue;
 		n = leftmost(rq.t);
 		curp = &task_table[rq.current];
 		if (key_comp(&(curp->vruntime), n->key) > 0) {
-			fprintf(stderr, "CTXT SWITCH (timeout)\n");
+			ctx_switches++;
 			/* no longer the most unfairly treated proc, time for context switch */
 			rq.min_vruntime = *((unsigned int*)n->key);
 			rq.current = *((unsigned int*)n->info);
@@ -158,5 +165,6 @@ int sched_run()
 			task_table[rq.current].n = NULL;
 		}
 	}
+	printf("%u context switches, %u ops\n", ctx_switches, ops);
 	return 0;
 }
